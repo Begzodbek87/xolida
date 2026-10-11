@@ -33,6 +33,7 @@ class MainActivity : Activity() {
 
     private val brain by lazy { Brain(applicationContext) }
     private val runner by lazy { ActionRunner(this) }
+    private val speaker by lazy { Speaker(applicationContext) }
 
     private val permissions: Array<String>
         get() {
@@ -95,6 +96,31 @@ class MainActivity : Activity() {
             Prefs.setApiKey(this, keyEdit.text.toString())
             Prefs.setWakeText(this, wakeEdit.text.toString())
             Toast.makeText(this, "Saqlandi", Toast.LENGTH_SHORT).show()
+        }
+
+        label("Xolidaning ovozi")
+        val voices = listOf(
+            "Madina (ayol, o'zbekcha)" to EdgeTts.VOICE_FEMALE,
+            "Sardor (erkak, o'zbekcha)" to EdgeTts.VOICE_MALE,
+            "Telefonning o'z ovozi" to "phone"
+        )
+        val voiceBtn = button("") {}
+        fun refreshVoice() {
+            val cur = Prefs.voice(this)
+            voiceBtn.text = "Ovoz: " + (voices.firstOrNull { it.second == cur }?.first ?: cur) + "  (almashtirish)"
+        }
+        voiceBtn.setOnClickListener {
+            val cur = Prefs.voice(this)
+            val idx = voices.indexOfFirst { it.second == cur }
+            Prefs.setVoice(this, voices[(idx + 1) % voices.size].second)
+            refreshVoice()
+        }
+        refreshVoice()
+        button("Ovozni sinash") {
+            log("Ovoz sinovi...")
+            speaker.speak("Assalomu alaykum! Men Xolidaman, sizga yordam berishga tayyorman.") {
+                log("Ovoz sinovi tugadi.")
+            }
         }
 
         label("3. Ruxsatlar (bir marta)")
@@ -188,7 +214,9 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (res.actions.length() > 0) log("Amallar: ${res.actions}")
                 val extra = runner.run(res.actions)
-                log("Xolida: " + listOf(res.say, extra).filter { it.isNotBlank() }.joinToString(" "))
+                val say = listOf(res.say, extra).filter { it.isNotBlank() }.joinToString(" ")
+                log("Xolida: $say")
+                if (say.isNotBlank()) speaker.speak(say) {}
             }
         }.start()
     }

@@ -88,7 +88,7 @@ Android Studio o'rnatmasdan ham bo'ladi. GitHub bepul serverlarida APK yig'iladi
 
 **"O'zbek tilini tanish yoqilmagan".** Telefonda Google ilovasi o'rnatilgan va yangilangan bo'lsin. Sozlamalar → Google → Ovoz bo'limida o'zbek tilini qo'shing.
 
-**Xolida g'alati talaffuzda gapiradi.** Google o'zbekcha ovozli o'qishni hali yaxshi qo'llab-quvvatlamaydi, shuning uchun ilova turk ovozidan foydalanadi. Sozlamalar → Tizim → Til → Matnni ovozga aylantirish (Text-to-speech) bo'limida boshqa dvigatel tanlab ko'rish mumkin.
+**Xolida o'zbekcha gapirmayapti / g'alati talaffuzda.** Xolida o'zbekcha gapirish uchun Microsoft Edge'ning Madina yoki Sardor ovozidan foydalanadi (internet kerak, bepul). Ilovadagi **Ovoz** tugmasi bilan ovozni tanlab, **Ovozni sinash**ni bosing. Jurnalda "Edge ovoz xatosi" chiqsa — internetni tekshiring; internet bo'lmasa Xolida vaqtincha telefonning o'z ovozida (odatda turkcha) gapiradi.
 
 **Budilnik qo'yilmadi.** "Boshqa ilovalar ustidan ko'rsatish" ruxsatini tekshiring.
 

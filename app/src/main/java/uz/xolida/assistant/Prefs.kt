@@ -16,6 +16,10 @@ object Prefs {
     fun wakeText(c: Context): String = sp(c).getString("wake", DEFAULT_WAKE) ?: DEFAULT_WAKE
     fun setWakeText(c: Context, v: String) = sp(c).edit().putString("wake", v).apply()
 
+    /** "uz-UZ-MadinaNeural", "uz-UZ-SardorNeural" yoki "phone" (telefonning o'z ovozi) */
+    fun voice(c: Context): String = sp(c).getString("voice", EdgeTts.VOICE_FEMALE) ?: EdgeTts.VOICE_FEMALE
+    fun setVoice(c: Context, v: String) = sp(c).edit().putString("voice", v).apply()
+
     fun wakeWords(c: Context): List<String> =
         wakeText(c).split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }
 }

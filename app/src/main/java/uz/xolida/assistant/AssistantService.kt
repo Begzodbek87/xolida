@@ -17,15 +17,12 @@ import android.os.Looper
 import android.os.PowerManager
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
 import org.json.JSONArray
 import org.json.JSONObject
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
-import java.util.Locale
 
 /**
  * Fonda ishlaydigan xizmat:
@@ -33,7 +30,7 @@ import java.util.Locale
  * 2) Signal beradi va buyruqni Google orqali o'zbekcha tinglaydi
  * 3) Claude'dan nima qilishni so'raydi, bajaradi va ovoz bilan javob beradi
  */
-class AssistantService : Service(), RecognitionListener, TextToSpeech.OnInitListener {
+class AssistantService : Service(), RecognitionListener {
 
     companion object {
         @Volatile
@@ -50,8 +47,7 @@ class AssistantService : Service(), RecognitionListener, TextToSpeech.OnInitList
     private var recognizer: Recognizer? = null
     private var wakeService: SpeechService? = null
     private var commandRecognizer: SpeechRecognizer? = null
-    private var tts: TextToSpeech? = null
-    private var ttsReady = false
+    private lateinit var speaker: Speaker
     private var tone: ToneGenerator? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var busy = false
@@ -68,7 +64,7 @@ class AssistantService : Service(), RecognitionListener, TextToSpeech.OnInitList
         }
         brain = Brain(this)
         runner = ActionRunner(this)
-        tts = TextToSpeech(this, this)
+        speaker = Speaker(this)
         tone = try { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80) } catch (e: Exception) { null }
         wakeLock = getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "xolida:listen")
@@ -250,39 +246,17 @@ class AssistantService : Service(), RecognitionListener, TextToSpeech.OnInitList
     private fun finish(say: String) {
         commandRecognizer?.destroy()
         commandRecognizer = null
-        if (say.isNotBlank()) StatusBus.post("Xolida: $say")
-        val t = tts
-        if (say.isBlank() || !ttsReady || t == null) {
+        if (say.isBlank()) {
             resume()
             return
         }
-        if (t.speak(say, TextToSpeech.QUEUE_FLUSH, null, "reply") != TextToSpeech.SUCCESS) resume()
+        StatusBus.post("Xolida: $say")
+        speaker.speak(say) { resume() }
     }
 
     private fun resume() {
         busy = false
         startWake()
-    }
-
-    override fun onInit(status: Int) {
-        val t = tts ?: return
-        if (status != TextToSpeech.SUCCESS) return
-        // O'zbek ovozi bo'lmasa, lotin harflarini yaxshi o'qiydigan turk ovozi
-        if (t.setLanguage(Locale("uz", "UZ")) < TextToSpeech.LANG_AVAILABLE) {
-            t.setLanguage(Locale("tr", "TR"))
-        }
-        t.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String?) {}
-            override fun onDone(utteranceId: String?) {
-                main.post { resume() }
-            }
-
-            @Deprecated("Deprecated in Java")
-            override fun onError(utteranceId: String?) {
-                main.post { resume() }
-            }
-        })
-        ttsReady = true
     }
 
     override fun onDestroy() {
@@ -292,7 +266,7 @@ class AssistantService : Service(), RecognitionListener, TextToSpeech.OnInitList
         recognizer?.close()
         model?.close()
         commandRecognizer?.destroy()
-        tts?.shutdown()
+        if (::speaker.isInitialized) speaker.shutdown()
         tone?.release()
         wakeLock?.let { if (it.isHeld) it.release() }
         StatusBus.post("Xolida to'xtatildi.")
